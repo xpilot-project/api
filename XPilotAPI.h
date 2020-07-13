@@ -115,35 +115,33 @@ public:
     virtual bool updateAircraft(const XPilotAPIBulkData& __bulk, size_t __inSize);
     // Updates the aircraft with fresh textual information, called from XPilotAPIConnect::UpdateAcList()
     virtual bool updateAircraft(const XPilotAPIBulkInfoTexts& __info, size_t __inSize);
-    // Helper in update loop to detected removed aircrafts
     bool isUpdated()const { return bUpdated; }
-    // Helper in update loop, resets `bUpdated` flag
     void resetUpdated() { bUpdated = false; }
 
 public:
-    std::string getKey() const { return key; }
-    std::string getCallsign() const { return info.callSign; }
-    std::string getModelIcao() const { return info.modelIcao; }
-    std::string getCslModel() const { return info.cslModel; }
-    std::string getSquawk() const { return info.squawk; }
-    std::string getOrigin() const { return info.origin; }
-    std::string getDestination() const { return info.destination; }
-    std::string getDescription() const;
+    std::string getKey()            const { return key; }
+    std::string getCallsign()       const { return info.callSign; }
+    std::string getModelIcao()      const { return info.modelIcao; }
+    std::string getCslModel()       const { return info.cslModel; }
+    std::string getSquawk()         const { return info.squawk; }
+    std::string getOrigin()         const { return info.origin; }
+    std::string getDestination()    const { return info.destination; }
+    std::string getDescription()    const;
+
     // position, altitude
-    double getLat()const { return bulk.lat; }
-    double getLon()const { return bulk.lon; }
-    float getHeading() const { return bulk.heading; }
-    float getRoll()const { return bulk.roll; }
-    float getPitch()const { return bulk.pitch; }
-    float getSpeedKn()const { return bulk.speed_kt; }
-    bool isOnGround()const { return bulk.bits.onGnd; }
-    float getFlaps()const { return bulk.flaps; }
-    float getGear()const { return bulk.gear; }
-    XPilotLights getLights()const { return bulk.bits; }
-    int getMultiIdx()const { return bulk.bits.multiIdx; }
+    double getLat()             const { return bulk.lat; }
+    double getLon()             const { return bulk.lon; }
+    float getHeading()          const { return bulk.heading; }
+    float getRoll()             const { return bulk.roll; }
+    float getPitch()            const { return bulk.pitch; }
+    float getSpeedKn()          const { return bulk.speed_kt; }
+    bool isOnGround()           const { return bulk.bits.onGnd; }
+    float getFlaps()            const { return bulk.flaps; }
+    float getGear()             const { return bulk.gear; }
+    XPilotLights getLights()    const { return bulk.bits; }
+    int getMultiIdx()           const { return bulk.bits.multiIdx; }
 
 public:
-    // Standard object creation callback.
     static XPilotAPIAircraft* CreateNewObject() { return new XPilotAPIAircraft(); }
 };
 
@@ -183,14 +181,12 @@ protected:
 
     // bulk info text array for communication with xPilot
     std::unique_ptr<XPilotAPIAircraft::XPilotAPIBulkInfoTexts[]> vInfoTexts;
-    
+
 protected:
     // Pointer to callback function returning new aircraft objects
     fCreateAcObject* pfCreateAcObject = nullptr;
-
     // The map of aircrafts
     MapXPilotAPIAircraft mapAc;
-
     // Last fetching of expensive data
     std::chrono::time_point<std::chrono::steady_clock> lastExpsvFetch;
 
@@ -206,7 +202,7 @@ public:
     // Does xPilot have control of AI planes?
     static bool doesXPilotControlAI();
     // Updates map of aircrafts and returns reference to them
-    const MapXPilotAPIAircraft& UpdateAcList(MapXPilotAPIAircraft* plistRemovedAc = nullptr);
+    const MapXPilotAPIAircraft& UpdateAcList(ListXPilotAPIAircraft* plistRemovedAc = nullptr);
     // Returns the map of aircraft
     const MapXPilotAPIAircraft& getAcMap() const { return mapAc; }
     // Find an aircraft for a given multiplayer slot
@@ -214,7 +210,7 @@ public:
 
 protected:
     template <class T>
-    bool DoBulkFetch(int numAc, XPilotDataRef& DR, int& outSizeLT,
+    bool DoBulkFetch(int numAc, XPilotDataRef& DR, int& outSizeLT, 
         std::unique_ptr<T[]>& vBulk);
 };
 
