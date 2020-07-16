@@ -212,7 +212,7 @@ public:
 
 protected:
     template <class T>
-    bool DoBulkFetch(int numAc, XPilotDataRef& DR, int& outSizeLT, 
+    bool DoBulkFetch(int numAc, XPilotDataRef& DR, int& outSize, 
         std::unique_ptr<T[]>& vBulk);
 };
 
