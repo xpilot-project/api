@@ -104,9 +104,9 @@ XPilotAPIAircraft::getDescription() const
     return ret;
 }
 
-/// Copies the provided `bulk` data and sets `bUpdated` to `true`
-/// if the provided data matches this aircraft.
-/// @note This function can _set_ this object's `key` for the first and only time.
+// Copies the provided `bulk` data and sets `bUpdated` to `true`
+// if the provided data matches this aircraft.
+// @note This function can _set_ this object's `key` for the first and only time.
 bool
 XPilotAPIAircraft::updateAircraft(const XPilotAPIBulkData& __bulk, size_t __inSize)
 {
@@ -124,8 +124,8 @@ XPilotAPIAircraft::updateAircraft(const XPilotAPIBulkData& __bulk, size_t __inSi
     return true;
 }
 
-/// Copies the provided `info` data and sets `bUpdated` to `true`
-/// if the provided data matches this aircraft.
+// Copies the provided `info` data and sets `bUpdated` to `true`
+// if the provided data matches this aircraft.
 bool
 XPilotAPIAircraft::updateAircraft(const XPilotAPIBulkInfoTexts& __info, size_t __inSize)
 {
@@ -135,7 +135,6 @@ XPilotAPIAircraft::updateAircraft(const XPilotAPIBulkInfoTexts& __info, size_t _
     info = __info;
 
     ZERO_TERM(info.modelIcao);
-    ZERO_TERM(info.opIcao);
     ZERO_TERM(info.callSign);
     ZERO_TERM(info.squawk);
     ZERO_TERM(info.origin);
@@ -147,7 +146,6 @@ XPilotAPIAircraft::updateAircraft(const XPilotAPIBulkInfoTexts& __info, size_t _
 }
 
 XPilotAPIConnect::XPilotAPIConnect(fCreateAcObject* _pfCreateAcObject, int numBulkAc) :
-    // clamp numBulkAc between 1 and 100
     iBulkAc(numBulkAc < 1 ? 1 : numBulkAc > 100 ? 100 : numBulkAc),
     vBulkNum(new XPilotAPIAircraft::XPilotAPIBulkData[iBulkAc]),
     vInfoTexts(new XPilotAPIAircraft::XPilotAPIBulkInfoTexts[iBulkAc]),
@@ -172,7 +170,7 @@ MapXPilotAPIAircraft& XPilotAPIConnect::UpdateAcList(ListXPilotAPIAircraft* plis
     static XPilotDataRef DRquick("xpilot/bulk/quick");
     static XPilotDataRef DRexpsv("xpilot/bulk/expensive");
 
-    const int numAc = isXPilotAvail() && doesXPilotDisplayAc() && DRquick.isValid() && DRexpsv.isValid() ? getXPilotNumAc() : 0;
+    const int numAc = isXPilotAvail() && DRquick.isValid() && DRexpsv.isValid() ? getXPilotNumAc() : 0;
     if (numAc <= 0) {
         if (plistRemovedAc) {
             for (MapXPilotAPIAircraft::value_type& p : mapAc) {

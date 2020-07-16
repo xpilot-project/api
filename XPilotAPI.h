@@ -41,38 +41,38 @@ class XPilotDataRef;
 class XPilotAPIAircraft
 {
 private:
-    // Unique key for this aircraft, usually the ICAO transponder code hex
     unsigned keyNum = 0;
-    // Key converted to a hex string
     std::string key;
 
 public:
     struct XPilotAPIBulkData {
     public:
-        uint64_t keyNum = 0;    // aircraft identifier, usually the transponder hex code
-        float heading = 0.0f; // heading
-        float roll = 0.0f; // roll; positive right
-        float pitch = 0.0f; // pitch; positive up
-        float speed_kt = 0.0f; // ground speed
-        float flaps = 0.0f; // flap position: 0.0 retracted, 1.0 fully extended
-        float gear = 0.0;  // gear position: 0.0 retracted, 1.0 fully extended
+        uint64_t keyNum             = 0;    // modeS identifier (xPilot assigns a unique and sequential hexadecimal number)
+        double lat                  = 0.0f; // latitude
+        double lon                  = 0.0f; // longitude
+        double alt_ft               = 0.0f; // altitude (ft)
+        float heading               = 0.0f; // true heading
+        float roll                  = 0.0f; // roll/bank (positive = right)
+        float pitch                 = 0.0f; // pitch (positive = up)
+        float speed_kt              = 0.0f; // ground speed (knots)
+        float terrainAlt_ft         = 0.0f; // terrain altitude beneath plane (ft)
+        float flaps                 = 0.0f; // flap position: 0.0 retracted, 1.0 fully extended
+        float gear                  = 0.0;  // gear position: 0.0 retracted, 1.0 fully extended
+        float bearing               = 0.0f; // degrees from the camera position
+        float dist_nm               = 0.0f; // distance to the camera
 
         struct BulkBitsTy {
-            bool onGnd : 1; // is the plane on the ground?
-            bool taxi : 1; // taxi lights
-            bool land : 1; // landing lights
-            bool bcn : 1; // beacon lights
-            bool strb : 1; // strobe lights
-            bool nav : 1; // navigation lights
-            unsigned filler1 : 2; // unused, fills up the byte alignment
-            int multiIdx : 8; // multiplayer index if plane is reported via sim/multiplayer/position datarefs, 0 if not
-            unsigned filler2 : 8;
-            unsigned filler3 : 32;
+            bool onGnd          : 1; // is the plane on the ground?
+            bool taxi           : 1; // taxi lights
+            bool land           : 1; // landing lights
+            bool bcn            : 1; // beacon lights
+            bool strb           : 1; // strobe lights
+            bool nav            : 1; // navigation lights
+            unsigned filler1    : 2; // unused, fills up the byte alignment
+            int multiIdx        : 8; // multiplayer index if plane is reported via sim/multiplayer/position datarefs, 0 if not
+            unsigned filler2    : 8;
+            unsigned filler3    : 32;
         } bits;
-
-        double lat = 0.0f; // latitude
-        double lon = 0.0f; // longitude
-        double alt_ft = 0.0f; // altitude
 
         XPilotAPIBulkData() { memset(&bits, 0, sizeof(bits)); }
     };
@@ -81,23 +81,26 @@ public:
     struct XPilotAPIBulkInfoTexts {
     public:
         uint64_t keyNum;
-        char modelIcao[8];      // aircraft type code, like A321
-        char opIcao[8];         // ICAO-code of operator, like "SWA"
-        char callSign[8];       // callsign, like "SWA312"
-        char squawk[8];         // transponder code (as text) like "7312"
-        char origin[8];         // origin airport (ICAO) like "KLAX"
-        char destination[8];    // destination airport (ICAO) like "KJFK"
-        char cslModel[24];      // name of CSL model used for actual rendering of plane
+        // aircraft model/operator
+        char            modelIcao[8];       // ICAO aircraft type like "A321"
+        char            acClass[4];         // Aircraft class like "L2J"
+        char            wtc[4];             // Wake turbulence category like H,M,L/M,L
+        // flight data
+        char            callSign[8];        // Callsign like "SWA916"
+        char            squawk[8];          // squawk code (as text) like "1000"
+        char            origin[8];          // Origin airport ICAO like "KLAX"
+        char            destination[8];     // Destination airport ICAO like "KJFK"
+        char            cslModel[24];       // Name of CSL model used for actual rendering of the plane
 
         XPilotAPIBulkInfoTexts() { memset(this, 0, sizeof(*this)); }
     };
 
     struct XPilotLights {
-        bool beacon : 1; // beacon lights
-        bool strobe : 1; // strobe lights
-        bool nav : 1; // navigation lights
-        bool landing : 1; // landing lights
-        bool taxi : 1; // taxi lights
+        bool beacon         : 1; // beacon lights
+        bool strobe         : 1; // strobe lights
+        bool nav            : 1; // navigation lights
+        bool landing        : 1; // landing lights
+        bool taxi           : 1; // taxi lights
 
         XPilotLights(const XPilotAPIBulkData::BulkBitsTy b) : beacon(b.bcn), strobe(b.strb), nav(b.nav), landing(b.land), taxi(b.taxi) {}
     };
@@ -115,6 +118,7 @@ public:
     virtual bool updateAircraft(const XPilotAPIBulkData& __bulk, size_t __inSize);
     // Updates the aircraft with fresh textual information, called from XPilotAPIConnect::UpdateAcList()
     virtual bool updateAircraft(const XPilotAPIBulkInfoTexts& __info, size_t __inSize);
+
     bool isUpdated()const { return bUpdated; }
     void resetUpdated() { bUpdated = false; }
 
@@ -195,8 +199,6 @@ public:
     virtual ~XPilotAPIConnect();
     // Is xPilot available? (checks via XPLMFindPluginBySignature)
     static bool isXPilotAvail();
-    // Is xPilot displaying aircraft?
-    static bool doesXPilotDisplayAc();
     // How many aircraft is xPilot displaying right now?
     static int getXPilotNumAc();
     // Does xPilot have control of AI planes?
@@ -216,43 +218,42 @@ protected:
 
 class XPilotDataRef {
 protected:
-    std::string     sDataRef;           ///< dataRef name, passed in via constructor
-    XPLMDataRef     dataRef = NULL;     ///< dataRef identifier returned by X-Plane
-    XPLMDataTypeID  dataTypes = xplmType_Unknown;   ///< supported data types
-    bool            bValid = true;      ///< does this object have a valid binding to a dataRef already?
+    std::string     sDataRef;           // dataRef name, passed in via constructor
+    XPLMDataRef     dataRef = NULL;     // dataRef identifier returned by X-Plane
+    XPLMDataTypeID  dataTypes = xplmType_Unknown;   // supported data types
+    bool            bValid = true;      // does this object have a valid binding to a dataRef already?
 public:
-    XPilotDataRef(std::string _sDataRef);  ///< Constructor, set the dataRef's name
+    XPilotDataRef(std::string _sDataRef);  // Constructor, set the dataRef's name
     inline bool needsInit() const { return bValid && !dataRef; }
-    /// @brief Found the dataRef _and_ it contains formats we can work with?
+    // @brief Found the dataRef _and_ it contains formats we can work with?
     bool    isValid();
-    /// Finds the dataRef (and would try again and again, no matter what bValid says)
+    // Finds the dataRef (and would try again and again, no matter what bValid says)
     bool    FindDataRef();
 
-    // types
-    /// Get types supported by the dataRef
+    // Get types supported by the dataRef
     XPLMDataTypeID getDataRefTypes() const { return dataTypes; }
-    /// Is `int` a supported dataRef type?
+    // Is `int` a supported dataRef type?
     bool    hasInt()   const { return dataTypes & xplmType_Int; }
-    /// Is `float` a supported dataRef type?
+    // Is `float` a supported dataRef type?
     bool    hasFloat() const { return dataTypes & xplmType_Float; }
-    /// Defines which types to work with to become `valid`
+    // Defines which types to work with to become `valid`
     static constexpr XPLMDataTypeID usefulTypes =
         xplmType_Int | xplmType_Float | xplmType_Data;
 
-    /// @brief Get dataRef's integer value.
-    /// Silently returns 0 if dataRef doesn't exist.
+    // @brief Get dataRef's integer value.
+    // Silently returns 0 if dataRef doesn't exist.
     int     getInt();
-    /// @brief Get dataRef's float value.
-    /// Silently returns 0.0f if dataRef doesn't exist.
+    // @brief Get dataRef's float value.
+    // Silently returns 0.0f if dataRef doesn't exist.
     float   getFloat();
-    /// Gets dataRef's integer value and returns if it is not zero
+    // Gets dataRef's integer value and returns if it is not zero
     inline bool getBool() { return getInt() != 0; }
-    /// Gets dataRef's binary data
+    // Gets dataRef's binary data
     int     getData(void* pOut, int inOffset, int inMaxBytes);
 
-    /// Writes an integer value to the dataRef
+    // Writes an integer value to the dataRef
     void    set(int i);
-    /// Writes a float vlue to the dataRef
+    // Writes a float vlue to the dataRef
     void    set(float f);
 };
 
